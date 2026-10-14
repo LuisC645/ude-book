@@ -1,6 +1,8 @@
 #ifndef VECTOR_H
 #define VECTOR_H
 
+#include "medidor.h"
+
 template<typename T>
 class Vector {
 public:
@@ -18,6 +20,7 @@ public:
 
         T* nuevo = new T[nuevaCap];
         for (int i = 0; i < tam; i++) {
+            Medidor::contar();
             nuevo[i] = datos[i];
         }
 
@@ -33,6 +36,7 @@ public:
             T* nuevo = new T[nuevaCap];
 
             for (int i = 0; i < tam; i++) {
+                Medidor::contar();
                 nuevo[i] = datos[i];
             }
 
@@ -52,6 +56,7 @@ public:
     void agregar(const T& x, int veces) {
         reservar(tam + veces);
         for (int i = 0; i < veces; i++) {
+            Medidor::contar();
             datos[tam] = x;
             tam++;
         }
@@ -59,6 +64,7 @@ public:
 
     void quitarEn(int i) {
         for (int j = i; j < tam - 1; j++) {
+            Medidor::contar();
             datos[j] = datos[j + 1];
         }
         tam--;
@@ -99,6 +105,7 @@ private:
             cap = otro.cap;
         }
         for (int i = 0; i < otro.tam; i++) {
+            Medidor::contar();
             datos[i] = otro.datos[i];
         }
         tam = otro.tam;
