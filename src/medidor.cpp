@@ -37,6 +37,7 @@ void Medidor::reporte(unsigned long long memEstruct) {
 
     cout << "\n------ Consumo de recursos ------\n";
     cout << "Iteraciones: " << iteraciones << "\n";
+
     cout << "Componentes externos: ";
     bool alguno = false;
     if (usosAleatorio > 0) {

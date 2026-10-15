@@ -8,7 +8,11 @@ CONFIG += c++17 cmdline
 
 SOURCES += \
         main.cpp \
+        src/album.cpp \
+        src/fecha.cpp \
+        src/foto.cpp \
         src/medidor.cpp \
+        src/mensaje.cpp \
         src/texto.cpp
 
 # Default rules for deployment.
@@ -18,5 +22,9 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     src/Vector.h \
+    src/album.h \
+    src/fecha.h \
+    src/foto.h \
     src/medidor.h \
+    src/mensaje.h \
     src/texto.h
