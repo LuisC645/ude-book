@@ -18,7 +18,7 @@ public:
     static void registrarLocal(unsigned long long bytes);
 
     static void reiniciar();
-    static void reporte(unsigned long long memEstructuras);
+    static void reportar(unsigned long long memEstructuras);
 
 
 private:

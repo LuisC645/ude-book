@@ -2,14 +2,14 @@
 #define FOTO_H
 
 #include <string>
-#include "Fecha.h"
+#include "fecha.h"
 
 class Foto
 {
 public:
 
     Foto();
-    Foto(const string& nombre, const Fecha& captura, unsigned int tamano, unsigned int likes);
+    Foto(const string& nombre, const Fecha& captura, unsigned int tamano, unsigned short likes);
 
     // getters
     const string& getNombre() const;

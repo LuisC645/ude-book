@@ -33,7 +33,7 @@ void Medidor::reiniciar() {
     bytesLocales = 0;
 }
 
-void Medidor::reporte(unsigned long long memEstruct) {
+void Medidor::reportar(unsigned long long memEstruct) {
 
     cout << "\n------ Consumo de recursos ------\n";
     cout << "Iteraciones: " << iteraciones << "\n";

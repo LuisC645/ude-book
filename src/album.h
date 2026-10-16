@@ -2,7 +2,7 @@
 #define ALBUM_H
 
 #include <string>
-#include "Foto.h"
+#include "foto.h"
 #include "Vector.h"
 
 class Album

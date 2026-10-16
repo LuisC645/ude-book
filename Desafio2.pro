@@ -11,9 +11,14 @@ SOURCES += \
         src/album.cpp \
         src/fecha.cpp \
         src/foto.cpp \
+        src/matrizamistad.cpp \
         src/medidor.cpp \
         src/mensaje.cpp \
-        src/texto.cpp
+        src/menu.cpp \
+        src/persistencia.cpp \
+        src/plataforma.cpp \
+        src/texto.cpp \
+        src/usuario.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -25,6 +30,11 @@ HEADERS += \
     src/album.h \
     src/fecha.h \
     src/foto.h \
+    src/matrizamistad.h \
     src/medidor.h \
     src/mensaje.h \
-    src/texto.h
+    src/menu.h \
+    src/persistencia.h \
+    src/plataforma.h \
+    src/texto.h \
+    src/usuario.h

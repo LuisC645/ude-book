@@ -1,6 +1,6 @@
 #include "fecha.h"
-#include "Medidor.h"
-#include "Texto.h"
+#include "medidor.h"
+#include "texto.h"
 
 #include <ctime>
 
