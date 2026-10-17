@@ -8,82 +8,69 @@
 #include "usuario.h"
 #include "mensaje.h"
 #include "album.h"
-#include "matrizAmistad.h"
+#include "matrizamistad.h"
 #include "persistencia.h"
 
 using namespace std;
 
-// Nucleo de Ude@Book: agrega todos los datos y resuelve la logica de cada
-// funcionalidad en RAM. No lee de consola; la interaccion vive en Menu.
 class Plataforma {
 public:
-    static const char* const SUBRUTA;      // sub-ruta fija de las fotos
-    static const char* const RUTA_DATOS;   // carpeta de los archivos
+    static const char* const SUBRUTA;
+    static const char* const RUTA_DATOS;
 
-    // Resultados de las validaciones
-    static const int OK = 0;
-    static const int NO_EXISTE = 1;
-    static const int MISMO_USUARIO = 2;
-    static const int YA_AMIGOS = 3;
-    static const int SOLICITUD_RECIBIDA = 4;   // el destino ya me envio una
-    static const int SOLICITUD_ENVIADA = 5;    // yo ya le envie una
-    static const int NO_ES_AMIGO = 6;
-    static const int TEXTO_VACIO = 7;
-    static const int TEXTO_LARGO = 8;
+    static const unsigned short OK = 0;
+    static const unsigned short NO_EXISTE = 1;
+    static const unsigned short MISMO_USUARIO = 2;
+    static const unsigned short YA_AMIGOS = 3;
+    static const unsigned short SOLICITUD_RECIBIDA = 4;
+    static const unsigned short SOLICITUD_ENVIADA = 5;
+    static const unsigned short NO_ES_AMIGO = 6;
+    static const unsigned short TEXTO_VACIO = 7;
+    static const unsigned short TEXTO_LARGO = 8;
 
-    static const int TAM_GRUPO = 3;          // fotos de amigos en el ingreso
-    static const int MIN_AMIGOS_ALTERNAR = 4;
+    static const unsigned short TAM_GRUPO = 3;
+    static const unsigned short MIN_AMIGOS_ALTERNAR = 4;
 
     Plataforma();
 
-    // Carga + menu. Devuelve el codigo de salida del programa.
     int ejecutar();
 
-    // Busqueda de usuarios (sobrecarga de metodos): por nombre devuelve el
-    // indice (busqueda binaria, los usuarios estan en orden alfabetico);
-    // por indice devuelve el usuario.
-    int buscarUsuario(const string& nombre) const;
-    const Usuario& buscarUsuario(int indice) const;
+    unsigned int buscarUsuario(const string& nombre) const;
+    const Usuario& buscarUsuario(unsigned int indice) const;
 
-    // RF-II: sesion y mejores amigos
     bool iniciarSesion(const string& nombre, const string& contrasena);
     void cerrarSesion();
-    int getActual() const;
-    int cantidadAmigos() const;
-    int tamanoGrupo() const;
-    int amigoDelGrupo(int i) const;
+    unsigned int getActual() const;
+    unsigned int cantidadAmigos() const;
+    unsigned int tamanoGrupo() const;
+    unsigned int amigoDelGrupo(unsigned int i) const;
     bool yaAlterno() const;
     bool puedeAlternar() const;
     bool alternarGrupo();
-    string rutaPerfil(int usuario) const;
+    string rutaPerfil(unsigned int usuario) const;
 
-    // RF-III: solicitudes
-    int enviarSolicitud(int destino);
-    int cantidadSolicitudes() const;
-    int solicitante(int i) const;
-    void aceptarSolicitud(int i);
-    void rechazarSolicitud(int i);
+    unsigned short enviarSolicitud(unsigned int destino);
+    unsigned int cantidadSolicitudes() const;
+    unsigned int solicitante(unsigned int i) const;
+    void aceptarSolicitud(unsigned int i);
+    void rechazarSolicitud(unsigned int i);
 
-    // RF-IV: perfil de amigo
-    int validarAmigo(int usuario) const;
-    void albumesVisibles(int amigo, Vector<int>& salida) const;
-    const Album& getAlbum(int usuario, int album) const;
-    string rutaFoto(int usuario, int album, int foto) const;
-    bool tieneLike(int usuario, int album, int foto) const;
-    bool alternarLike(int usuario, int album, int foto);
+    unsigned short validarAmigo(unsigned int usuario) const;
+    void albumesVisibles(unsigned int amigo, Vector<unsigned int>& salida) const;
+    const Album& getAlbum(unsigned int usuario, unsigned int album) const;
+    string rutaFoto(unsigned int usuario, unsigned int album, unsigned int foto) const;
+    bool tieneLike(unsigned int usuario, unsigned int album, unsigned int foto) const;
+    bool alternarLike(unsigned int usuario, unsigned int album, unsigned int foto);
 
-    // RF-V: sugerencias
-    void sugerencias(int k, Vector<int>& candidatos, Vector<int>& comunes);
+    void sugerencias(unsigned short k, Vector<unsigned int>& candidatos, Vector<unsigned int>& comunes);
 
-    // RF-VI: mensajes
-    int enviarMensaje(int destino, const string& texto);
-    const Vector<int>& noLeidosActual() const;
+    unsigned short enviarMensaje(unsigned int destino, const string& texto);
+    const Vector<unsigned int>& noLeidosActual() const;
     void marcarNoLeidosComoLeidos();
-    const Vector<int>& recibidosActual() const;
-    void buscarRango(const Fecha& inicio, const Fecha& fin, int& desde, int& hasta) const;
-    const Mensaje& getMensaje(int i) const;
+    const Vector<unsigned int>& recibidosActual() const;
+    void buscarRango(const Fecha& inicio, const Fecha& fin, unsigned int& desde, unsigned int& hasta) const;
+    const Mensaje& getMensaje(unsigned int i) const;
 
-    // RF-VII
     unsigned long long memoriaTotal() const;
 
 private:
@@ -92,23 +79,23 @@ private:
     MatrizAmistad amistades;
     Persistencia persistencia;
     mt19937 generador;
-    Fecha reloj;                      // fecha del mensaje mas reciente
+    Fecha reloj;
 
-    // Estado de la sesion
-    int actual;
-    Vector<int> amigosSesion;         // amigos al iniciar sesion
-    Vector<int> pesosSesion;          // peso 2/5/7 de cada amigo
-    Vector<int> grupo;                // posiciones en amigosSesion
-    bool alternado;                   // la opcion N ya se uso
-    Vector<const Foto*> likesSesion;  // fotos a las que di like en esta sesion
+    unsigned int actual;
+    Vector<unsigned int> amigosSesion;
+    Vector<unsigned short> pesosSesion;
+    Vector<unsigned int> grupo;
+    bool alternado;
+    Vector<const Foto*> likesSesion;
 
     bool cargar();
-    static int pesoPorComunes(int comunes);
-    int girarRuleta(const Vector<bool>& usado);
-    bool hayPendiente(int a, int b) const;
-    bool esMejorCandidato(int comunesA, int usuarioA, int comunesB, int usuarioB) const;
-    string rutaAlbumes(int usuario) const;
-    int buscarLike(const Foto* foto) const;
+    static unsigned short pesoPorComunes(unsigned int comunes);
+    unsigned int girarRuleta(const Vector<bool>& usado);
+    bool hayPendiente(unsigned int a, unsigned int b) const;
+    bool esMejorCandidato(unsigned int comunesA, unsigned int usuarioA,
+                          unsigned int comunesB, unsigned int usuarioB) const;
+    string rutaAlbumes(unsigned int usuario) const;
+    unsigned int buscarLike(const Foto* foto) const;
 };
 
 #endif

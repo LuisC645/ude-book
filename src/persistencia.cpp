@@ -43,18 +43,20 @@ bool Persistencia::abrirEscritura(ofstream& archivo, const char* nombre, bool an
     return true;
 }
 
+// Lee la siguiente linea del archivo. Devuelve false al llegar al final.
 bool Persistencia::leerLinea(ifstream& archivo, string& registro) {
     Medidor::externoArchivo();
     return Texto::leerLinea(archivo, registro);
 }
 
-// Separar por |
-int Persistencia::dividir(const string& registro, int maxCampos, Vector<string>& campos) {
+// Separa la linea por '|'. El ultimo campo se queda con el resto de la linea
+// (asi el texto de un mensaje puede contener '|').
+unsigned int Persistencia::dividir(const string& registro, unsigned short maxCampos, Vector<string>& campos) {
     campos.vaciar();
-    int inicio = 0;
-    for (int i = 0; i < (int)registro.length(); i++) {
+    unsigned int inicio = 0;
+    for (unsigned int i = 0; i < (unsigned int)registro.length(); i++) {
         Medidor::contar();
-        if (registro[i] == '|' && campos.tamano() < maxCampos - 1) {
+        if (registro[i] == '|' && campos.tamano() + 1 < maxCampos) {
             campos.agregar(registro.substr(inicio, i - inicio));
             inicio = i + 1;
         }
@@ -63,8 +65,8 @@ int Persistencia::dividir(const string& registro, int maxCampos, Vector<string>&
     return campos.tamano();
 }
 
-bool Persistencia::error() const {
-    cout << "Error" << "\n";
+bool Persistencia::error(const char* nombre, unsigned int linea, const char* motivo) const {
+    cout << "Error en " << carpeta << nombre << " (linea " << linea << "): " << motivo << "\n";
     return false;
 }
 
@@ -78,38 +80,38 @@ bool Persistencia::cargarUsuarios(Vector<Usuario>& usuarios) {
     if (!abrirLectura(archivo, nombreArchivo)) {
         return false;
     }
-
     Vector<string> campos;
     string registro;
-    int linea = 0;
-
+    unsigned int linea = 0;
     while (leerLinea(archivo, registro)) {
         Medidor::contar();
         linea++;
         if (dividir(registro, 7, campos) != 7) {
-            return error();
+            return error(nombreArchivo, linea, "se esperaban 7 campos separados por |");
         }
         string nombre = Texto::recortado(campos[0]);
         if (nombre.empty() || Texto::contiene(nombre, ' ')) {
-            return error();
+            return error(nombreArchivo, linea, "nombre de usuario vacio o con espacios");
         }
-
+        // Orden alfabetico estricto: permite la busqueda binaria y garantiza nombres unicos.
+        if (usuarios.tamano() > 0 && !(usuarios[usuarios.tamano() - 1].getNombre() < nombre)) {
+            return error(nombreArchivo, linea, "los usuarios deben estar en orden alfabetico y sin repetirse");
+        }
         Fecha nacimiento;
         Fecha inscripcion;
-
         if (!Fecha::desdeCompacta(Texto::recortado(campos[1]), nacimiento)
             || !Fecha::desdeCompacta(Texto::recortado(campos[6]), inscripcion)) {
-            return error();
+            return error(nombreArchivo, linea, "fecha invalida (formato AAAAMMDD)");
         }
         string contrasena = Texto::recortado(campos[3]);
         if (contrasena.empty()) {
-            return error();
+            return error(nombreArchivo, linea, "contrasena vacia");
         }
         usuarios.agregar(Usuario(nombre, nacimiento, Texto::recortado(campos[2]), contrasena,
                                  Texto::recortado(campos[4]), Texto::recortado(campos[5]), inscripcion));
     }
     if (usuarios.tamano() == 0) {
-        return error();
+        return error(nombreArchivo, 1, "no hay usuarios registrados");
     }
     return true;
 }
@@ -122,20 +124,18 @@ bool Persistencia::cargarAmistades(MatrizAmistad& matriz) {
     }
     Vector<string> campos;
     string registro;
-    int linea = 0;
-
+    unsigned int linea = 0;
     while (leerLinea(archivo, registro)) {
         Medidor::contar();
         linea++;
-        int a = -1;
-        int b = -1;
-
+        unsigned int a = 0;
+        unsigned int b = 0;
         if (dividir(registro, 2, campos) != 2 || !Texto::aEntero(campos[0], a)
             || !Texto::aEntero(campos[1], b)) {
-            return error();
+            return error(nombreArchivo, linea, "se esperaba idA|idB");
         }
         if (a >= matriz.cantidad() || b >= matriz.cantidad() || a == b) {
-            return error();
+            return error(nombreArchivo, linea, "usuario inexistente o amistad consigo mismo");
         }
         matriz.agregar(a, b);
     }
@@ -150,26 +150,26 @@ bool Persistencia::cargarSolicitudes(Vector<Usuario>& usuarios) {
     }
     Vector<string> campos;
     string registro;
-    int linea = 0;
+    unsigned int linea = 0;
     while (leerLinea(archivo, registro)) {
         Medidor::contar();
         linea++;
-        int origen = -1;
-        int destino = -1;
+        unsigned int origen = 0;
+        unsigned int destino = 0;
         if (dividir(registro, 2, campos) != 2 || !Texto::aEntero(campos[0], origen)
             || !Texto::aEntero(campos[1], destino)) {
-            return error();
+            return error(nombreArchivo, linea, "se esperaba idOrigen|idDestino");
         }
         if (origen >= usuarios.tamano() || destino >= usuarios.tamano() || origen == destino) {
-            return error();
+            return error(nombreArchivo, linea, "usuario inexistente o solicitud a si mismo");
         }
         usuarios[destino].agregarSolicitud(origen);
     }
     return true;
 }
 
-bool Persistencia::cargarAlbumes(Vector<Usuario>& usuarios, Vector<int>& albumDueno,
-                                 Vector<int>& albumPosicion) {
+bool Persistencia::cargarAlbumes(Vector<Usuario>& usuarios, Vector<unsigned int>& albumDueno,
+                                 Vector<unsigned int>& albumPosicion) {
     const char* nombreArchivo = "albumes.txt";
     ifstream archivo;
     if (!abrirLectura(archivo, nombreArchivo)) {
@@ -177,29 +177,29 @@ bool Persistencia::cargarAlbumes(Vector<Usuario>& usuarios, Vector<int>& albumDu
     }
     Vector<string> campos;
     string registro;
-    int linea = 0;
+    unsigned int linea = 0;
     while (leerLinea(archivo, registro)) {
         Medidor::contar();
         linea++;
-        int dueno = -1;
-        int privacidad = -1;
+        unsigned int dueno = 0;
+        unsigned int privacidad = 0;
         if (dividir(registro, 3, campos) != 3 || !Texto::aEntero(campos[0], dueno)
             || !Texto::aEntero(campos[2], privacidad)) {
-            return error();
+            return error(nombreArchivo, linea, "se esperaba idDueno|nombre|privacidad");
         }
         if (dueno >= usuarios.tamano()) {
-            return error();
+            return error(nombreArchivo, linea, "dueno inexistente");
         }
         // Agrupados por dueno: asi guardarFotos puede reconstruir el numero de cada album.
         if (albumDueno.tamano() > 0 && dueno < albumDueno[albumDueno.tamano() - 1]) {
-            return error();
+            return error(nombreArchivo, linea, "los albumes deben estar ordenados por dueno");
         }
         if (privacidad > Album::PRIVADO) {
-            return error();
+            return error(nombreArchivo, linea, "privacidad invalida (0 publico, 1 amigos, 2 privado)");
         }
         string nombre = Texto::recortado(campos[1]);
         if (nombre.empty()) {
-            return error();
+            return error(nombreArchivo, linea, "nombre de album vacio");
         }
         albumDueno.agregar(dueno);
         albumPosicion.agregar(usuarios[dueno].cantidadAlbumes());
@@ -208,8 +208,8 @@ bool Persistencia::cargarAlbumes(Vector<Usuario>& usuarios, Vector<int>& albumDu
     return true;
 }
 
-bool Persistencia::cargarFotos(Vector<Usuario>& usuarios, const Vector<int>& albumDueno,
-                               const Vector<int>& albumPosicion) {
+bool Persistencia::cargarFotos(Vector<Usuario>& usuarios, const Vector<unsigned int>& albumDueno,
+                               const Vector<unsigned int>& albumPosicion) {
     const char* nombreArchivo = "fotos.txt";
     ifstream archivo;
     if (!abrirLectura(archivo, nombreArchivo)) {
@@ -217,27 +217,27 @@ bool Persistencia::cargarFotos(Vector<Usuario>& usuarios, const Vector<int>& alb
     }
     Vector<string> campos;
     string registro;
-    int linea = 0;
+    unsigned int linea = 0;
     while (leerLinea(archivo, registro)) {
         Medidor::contar();
         linea++;
-        int album = -1;
-        int tamano = -1;
-        int likes = -1;
+        unsigned int album = 0;
+        unsigned int tamano = 0;
+        unsigned int likes = 0;
         Fecha captura;
         if (dividir(registro, 5, campos) != 5 || !Texto::aEntero(campos[0], album)
             || !Texto::aEntero(campos[3], tamano) || !Texto::aEntero(campos[4], likes)) {
-            return error();
+            return error(nombreArchivo, linea, "se esperaba idAlbum|nombre|AAAAMMDD|tamano|likes");
         }
         if (album >= albumDueno.tamano()) {
-            return error();
+            return error(nombreArchivo, linea, "album inexistente");
         }
         if (!Fecha::desdeCompacta(Texto::recortado(campos[2]), captura)) {
-            return error();
+            return error(nombreArchivo, linea, "fecha de captura invalida");
         }
         string nombre = Texto::recortado(campos[1]);
         if (nombre.empty()) {
-            return error();
+            return error(nombreArchivo, linea, "nombre de foto vacio");
         }
         usuarios[albumDueno[album]].getAlbum(albumPosicion[album])
             .agregarFoto(Foto(nombre, captura, tamano, likes));
@@ -253,37 +253,36 @@ bool Persistencia::cargarMensajes(Vector<Usuario>& usuarios, Vector<Mensaje>& me
     }
     Vector<string> campos;
     string registro;
-    int linea = 0;
-
+    unsigned int linea = 0;
     while (leerLinea(archivo, registro)) {
         Medidor::contar();
         linea++;
-        int emisor = -1;
-        int receptor = -1;
-        int leido = -1;
+        unsigned int emisor = 0;
+        unsigned int receptor = 0;
+        unsigned int leido = 0;
         Fecha fecha;
         if (dividir(registro, 5, campos) != 5 || !Texto::aEntero(campos[0], emisor)
             || !Texto::aEntero(campos[1], receptor) || !Texto::aEntero(campos[3], leido)) {
-            return error();
+            return error(nombreArchivo, linea, "se esperaba emisor|receptor|AAAAMMDDhhmm|leido|texto");
         }
         if (emisor >= usuarios.tamano() || receptor >= usuarios.tamano() || emisor == receptor) {
-            return error();
+            return error(nombreArchivo, linea, "emisor o receptor invalido");
         }
         if (!Fecha::desdeCompacta(Texto::recortado(campos[2]), fecha)) {
-            return error();
+            return error(nombreArchivo, linea, "fecha-hora invalida (AAAAMMDDhhmm)");
         }
         // Orden por fecha: permite la busqueda binaria del rango de fechas.
         if (mensajes.tamano() > 0 && fecha < mensajes[mensajes.tamano() - 1].getFecha()) {
-            return error();
+            return error(nombreArchivo, linea, "los mensajes deben estar ordenados por fecha");
         }
         if (leido > 1) {
-            return error();
+            return error(nombreArchivo, linea, "estado de lectura invalido (0 o 1)");
         }
         const string& texto = campos[4];
-        if (Texto::esVacio(texto) || (int)texto.length() > Mensaje::MAX_TEXTO) {
-            return error();
+        if (Texto::esVacio(texto) || (unsigned int)texto.length() > Mensaje::MAX_TEXTO) {
+            return error(nombreArchivo, linea, "el texto debe tener entre 1 y 512 caracteres");
         }
-        int indice = mensajes.tamano();
+        unsigned int indice = mensajes.tamano();
         mensajes.agregar(Mensaje(emisor, receptor, texto, fecha, leido == 1));
         usuarios[emisor].agregarEnviado(indice);
         usuarios[receptor].agregarRecibido(indice);
@@ -299,7 +298,7 @@ bool Persistencia::cargarMensajes(Vector<Usuario>& usuarios, Vector<Mensaje>& me
 // ---------------------------------------------------------------------------
 
 // Una amistad nueva solo se anexa como ultima linea del archivo.
-void Persistencia::agregarAmistad(int a, int b) {
+void Persistencia::agregarAmistad(unsigned int a, unsigned int b) {
     ofstream archivo;
     if (abrirEscritura(archivo, "amistades.txt", true)) {
         archivo << a << '|' << b << '\n';
@@ -312,9 +311,9 @@ void Persistencia::guardarSolicitudes(const Vector<Usuario>& usuarios) {
     if (!abrirEscritura(archivo, "solicitudes.txt", false)) {
         return;
     }
-    for (int destino = 0; destino < usuarios.tamano(); destino++) {
+    for (unsigned int destino = 0; destino < usuarios.tamano(); destino++) {
         Medidor::contar();
-        for (int i = 0; i < usuarios[destino].cantidadSolicitudes(); i++) {
+        for (unsigned int i = 0; i < usuarios[destino].cantidadSolicitudes(); i++) {
             Medidor::contar();
             archivo << usuarios[destino].getSolicitudOrigen(i) << '|' << destino << '\n';
             Medidor::externoArchivo();
@@ -328,13 +327,13 @@ void Persistencia::guardarFotos(const Vector<Usuario>& usuarios) {
     if (!abrirEscritura(archivo, "fotos.txt", false)) {
         return;
     }
-    int numeroAlbum = 0;
-    for (int u = 0; u < usuarios.tamano(); u++) {
+    unsigned int numeroAlbum = 0;
+    for (unsigned int u = 0; u < usuarios.tamano(); u++) {
         Medidor::contar();
-        for (int a = 0; a < usuarios[u].cantidadAlbumes(); a++) {
+        for (unsigned int a = 0; a < usuarios[u].cantidadAlbumes(); a++) {
             Medidor::contar();
             const Album& album = usuarios[u].getAlbum(a);
-            for (int f = 0; f < album.cantidadFotos(); f++) {
+            for (unsigned int f = 0; f < album.cantidadFotos(); f++) {
                 Medidor::contar();
                 const Foto& foto = album.getFoto(f);
                 archivo << numeroAlbum << '|' << foto.getNombre() << '|';
@@ -352,7 +351,7 @@ void Persistencia::guardarMensajes(const Vector<Mensaje>& mensajes) {
     if (!abrirEscritura(archivo, "mensajes.txt", false)) {
         return;
     }
-    for (int i = 0; i < mensajes.tamano(); i++) {
+    for (unsigned int i = 0; i < mensajes.tamano(); i++) {
         Medidor::contar();
         const Mensaje& m = mensajes[i];
         archivo << m.getEmisor() << '|' << m.getReceptor() << '|';

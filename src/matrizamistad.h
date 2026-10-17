@@ -15,18 +15,18 @@ public:
 
     MatrizAmistad& operator=(const MatrizAmistad& otra);
 
-    void inicializar(int cantidadUsuarios);
-    int cantidad() const;
+    void inicializar(unsigned int cantidadUsuarios);
+    unsigned int cantidad() const;
 
-    void agregar(int a, int b); // amistad mutua
-    bool sonAmigos(int a, int b) const;
-    int comunes(int a, int b) const;
-    void amigosDe(int a, Vector<int>& salida) const;
+    void agregar(unsigned int a, unsigned int b); // amistad mutua
+    bool sonAmigos(unsigned int a, unsigned int b) const;
+    unsigned int comunes(unsigned int a, unsigned int b) const;
+    void amigosDe(unsigned int a, Vector<unsigned int>& salida) const;
 
     unsigned long long memoriaDinamica() const;
 
 private:
-    int n;
+    unsigned int n;
     bool* celdas;
 
     void copiarDe(const MatrizAmistad& otra);

@@ -10,24 +10,22 @@ using namespace std;
 const char* const Plataforma::SUBRUTA = "udeabook";
 const char* const Plataforma::RUTA_DATOS = "data/";
 
-const int Plataforma::OK;
-const int Plataforma::NO_EXISTE;
-const int Plataforma::MISMO_USUARIO;
-const int Plataforma::YA_AMIGOS;
-const int Plataforma::SOLICITUD_RECIBIDA;
-const int Plataforma::SOLICITUD_ENVIADA;
-const int Plataforma::NO_ES_AMIGO;
-const int Plataforma::TEXTO_VACIO;
-const int Plataforma::TEXTO_LARGO;
-const int Plataforma::TAM_GRUPO;
-const int Plataforma::MIN_AMIGOS_ALTERNAR;
+const unsigned short Plataforma::OK;
+const unsigned short Plataforma::NO_EXISTE;
+const unsigned short Plataforma::MISMO_USUARIO;
+const unsigned short Plataforma::YA_AMIGOS;
+const unsigned short Plataforma::SOLICITUD_RECIBIDA;
+const unsigned short Plataforma::SOLICITUD_ENVIADA;
+const unsigned short Plataforma::NO_ES_AMIGO;
+const unsigned short Plataforma::TEXTO_VACIO;
+const unsigned short Plataforma::TEXTO_LARGO;
+const unsigned short Plataforma::TAM_GRUPO;
+const unsigned short Plataforma::MIN_AMIGOS_ALTERNAR;
 
-Plataforma::Plataforma() : reloj(1, 1, 2026, 0, 0), actual(-1), alternado(false) {}
+// Inicializa la plataforma sin sesion activa.
+Plataforma::Plataforma() : reloj(2026, 1, 1, 0, 0), actual(NINGUNO), alternado(false) {}
 
-// ---------------------------------------------------------------------------
-// Ejecucion y carga (RF-I)
-// ---------------------------------------------------------------------------
-
+// Carga los datos, muestra el consumo de recursos e inicia el menu.
 int Plataforma::ejecutar() {
     Medidor::reiniciar();
     cout << "Cargando datos desde " << RUTA_DATOS << " ...\n";
@@ -43,8 +41,8 @@ int Plataforma::ejecutar() {
     return 0;
 }
 
+// Lee los archivos de datos y deja la informacion en memoria.
 bool Plataforma::cargar() {
-    // Semilla real del generador de aleatorios.
     random_device semilla;
     Medidor::externoAleatorio();
     generador.seed(semilla());
@@ -59,9 +57,8 @@ bool Plataforma::cargar() {
         return false;
     }
 
-    // Tablas temporales: numero de album -> (dueno, posicion entre sus albumes).
-    Vector<int> albumDueno;
-    Vector<int> albumPosicion;
+    Vector<unsigned int> albumDueno;
+    Vector<unsigned int> albumPosicion;
     if (!persistencia.cargarAlbumes(usuarios, albumDueno, albumPosicion)
         || !persistencia.cargarFotos(usuarios, albumDueno, albumPosicion)) {
         return false;
@@ -72,23 +69,19 @@ bool Plataforma::cargar() {
     if (!persistencia.cargarMensajes(usuarios, mensajes)) {
         return false;
     }
-    // Los mensajes nuevos se fechan despues del mas reciente cargado.
     if (mensajes.tamano() > 0) {
         reloj = mensajes[mensajes.tamano() - 1].getFecha();
     }
     return true;
 }
 
-// ---------------------------------------------------------------------------
-// Busqueda de usuarios
-// ---------------------------------------------------------------------------
-
-int Plataforma::buscarUsuario(const string& nombre) const {
-    int bajo = 0;
-    int alto = usuarios.tamano() - 1;
-    while (bajo <= alto) {
+// Busca un usuario por nombre y devuelve su indice o NINGUNO.
+unsigned int Plataforma::buscarUsuario(const string& nombre) const {
+    unsigned int bajo = 0;
+    unsigned int alto = usuarios.tamano();
+    while (bajo < alto) {
         Medidor::contar();
-        int medio = (bajo + alto) / 2;
+        unsigned int medio = (bajo + alto) / 2;
         const string& actualNombre = usuarios[medio].getNombre();
         if (actualNombre == nombre) {
             return medio;
@@ -96,21 +89,19 @@ int Plataforma::buscarUsuario(const string& nombre) const {
         if (actualNombre < nombre) {
             bajo = medio + 1;
         } else {
-            alto = medio - 1;
+            alto = medio;
         }
     }
-    return -1;
+    return NINGUNO;
 }
 
-const Usuario& Plataforma::buscarUsuario(int indice) const {
+// Devuelve el usuario que esta en el indice dado.
+const Usuario& Plataforma::buscarUsuario(unsigned int indice) const {
     return usuarios[indice];
 }
 
-// ---------------------------------------------------------------------------
-// RF-II: ingreso y mejores amigos
-// ---------------------------------------------------------------------------
-
-int Plataforma::pesoPorComunes(int comunes) {
+// Calcula el peso de un amigo segun la cantidad de amigos en comun.
+unsigned short Plataforma::pesoPorComunes(unsigned int comunes) {
     if (comunes <= 10) {
         return 2;
     }
@@ -120,23 +111,23 @@ int Plataforma::pesoPorComunes(int comunes) {
     return 7;
 }
 
-// Ruleta ponderada: devuelve la posicion elegida entre los amigos no usados, o -1.
-int Plataforma::girarRuleta(const Vector<bool>& usado) {
-    int total = 0;
-    for (int i = 0; i < pesosSesion.tamano(); i++) {
+// Elige al azar un amigo no usado segun su peso y devuelve su posicion o NINGUNO.
+unsigned int Plataforma::girarRuleta(const Vector<bool>& usado) {
+    unsigned int total = 0;
+    for (unsigned int i = 0; i < pesosSesion.tamano(); i++) {
         Medidor::contar();
         if (!usado[i]) {
             total += pesosSesion[i];
         }
     }
     if (total == 0) {
-        return -1;
+        return NINGUNO;
     }
-    uniform_int_distribution<int> distribucion(0, total - 1);
+    uniform_int_distribution<unsigned int> distribucion(0, total - 1);
     Medidor::externoAleatorio();
-    int r = distribucion(generador);
-    int acumulado = 0;
-    for (int i = 0; i < pesosSesion.tamano(); i++) {
+    unsigned int r = distribucion(generador);
+    unsigned int acumulado = 0;
+    for (unsigned int i = 0; i < pesosSesion.tamano(); i++) {
         Medidor::contar();
         if (!usado[i]) {
             acumulado += pesosSesion[i];
@@ -145,12 +136,13 @@ int Plataforma::girarRuleta(const Vector<bool>& usado) {
             }
         }
     }
-    return -1;
+    return NINGUNO;
 }
 
+// Valida las credenciales e inicializa los datos de la sesion.
 bool Plataforma::iniciarSesion(const string& nombre, const string& contrasena) {
-    int u = buscarUsuario(nombre);
-    if (u < 0 || !usuarios[u].contrasenaCorrecta(contrasena)) {
+    unsigned int u = buscarUsuario(nombre);
+    if (u == NINGUNO || !usuarios[u].contrasenaCorrecta(contrasena)) {
         return false;
     }
     actual = u;
@@ -158,25 +150,23 @@ bool Plataforma::iniciarSesion(const string& nombre, const string& contrasena) {
     likesSesion.vaciar();
     grupo.vaciar();
 
-    // Amigos y pesos se calculan una sola vez por sesion.
     amistades.amigosDe(u, amigosSesion);
     pesosSesion.vaciar();
     pesosSesion.reservar(amigosSesion.tamano());
-    for (int i = 0; i < amigosSesion.tamano(); i++) {
+    for (unsigned int i = 0; i < amigosSesion.tamano(); i++) {
         Medidor::contar();
         pesosSesion.agregar(pesoPorComunes(amistades.comunes(u, amigosSesion[i])));
     }
 
-    // Seleccion de hasta 3 amigos distintos sin reemplazo.
     Vector<bool> usado;
     usado.agregar(false, amigosSesion.tamano());
-    int meta = TAM_GRUPO;
+    unsigned int meta = TAM_GRUPO;
     if (amigosSesion.tamano() < meta) {
         meta = amigosSesion.tamano();
     }
     while (grupo.tamano() < meta) {
         Medidor::contar();
-        int pos = girarRuleta(usado);
+        unsigned int pos = girarRuleta(usado);
         usado[pos] = true;
         grupo.agregar(pos);
     }
@@ -184,8 +174,9 @@ bool Plataforma::iniciarSesion(const string& nombre, const string& contrasena) {
     return true;
 }
 
+// Limpia los datos de la sesion actual.
 void Plataforma::cerrarSesion() {
-    actual = -1;
+    actual = NINGUNO;
     alternado = false;
     amigosSesion.vaciar();
     pesosSesion.vaciar();
@@ -193,61 +184,64 @@ void Plataforma::cerrarSesion() {
     likesSesion.vaciar();
 }
 
-int Plataforma::getActual() const {
+// Devuelve el indice del usuario con sesion activa.
+unsigned int Plataforma::getActual() const {
     return actual;
 }
 
-int Plataforma::cantidadAmigos() const {
+// Devuelve la cantidad de amigos del usuario actual.
+unsigned int Plataforma::cantidadAmigos() const {
     return amigosSesion.tamano();
 }
 
-int Plataforma::tamanoGrupo() const {
+// Devuelve la cantidad de amigos del grupo mostrado.
+unsigned int Plataforma::tamanoGrupo() const {
     return grupo.tamano();
 }
 
-int Plataforma::amigoDelGrupo(int i) const {
+// Devuelve el indice del amigo en la posicion dada del grupo.
+unsigned int Plataforma::amigoDelGrupo(unsigned int i) const {
     return amigosSesion[grupo[i]];
 }
 
+// Indica si el grupo ya se alterno en esta sesion.
 bool Plataforma::yaAlterno() const {
     return alternado;
 }
 
+// Indica si el grupo se puede alternar.
 bool Plataforma::puedeAlternar() const {
     return !alternado && amigosSesion.tamano() >= MIN_AMIGOS_ALTERNAR;
 }
 
-// Opcion N: nuevo grupo distinto del primero, sin repetidos internos.
+// Elige un grupo de amigos distinto al primero.
 bool Plataforma::alternarGrupo() {
     if (!puedeAlternar()) {
         return false;
     }
-    int f = amigosSesion.tamano();
+    unsigned int f = amigosSesion.tamano();
     Vector<bool> usado;
     Vector<bool> enPrimero;
     usado.agregar(false, f);
     enPrimero.agregar(false, f);
-    for (int i = 0; i < grupo.tamano(); i++) {
+    for (unsigned int i = 0; i < grupo.tamano(); i++) {
         Medidor::contar();
         usado[grupo[i]] = true;
         enPrimero[grupo[i]] = true;
     }
 
-    // 1) Sorteo entre los amigos que no estaban en el primer grupo.
-    Vector<int> nuevo;
+    Vector<unsigned int> nuevo;
     while (nuevo.tamano() < TAM_GRUPO) {
         Medidor::contar();
-        int pos = girarRuleta(usado);
-        if (pos < 0) {
+        unsigned int pos = girarRuleta(usado);
+        if (pos == NINGUNO) {
             break;
         }
         usado[pos] = true;
         nuevo.agregar(pos);
     }
-    // 2) Con 4 o 5 amigos se completa con los del primer grupo
-    //    (sin repetir los ya elegidos en el nuevo grupo).
     if (nuevo.tamano() < TAM_GRUPO) {
-        for (int i = 0; i < f; i++) {
+        for (unsigned int i = 0; i < f; i++) {
             Medidor::contar();
             if (enPrimero[i]) {
                 usado[i] = false;
@@ -255,7 +249,7 @@ bool Plataforma::alternarGrupo() {
         }
         while (nuevo.tamano() < TAM_GRUPO) {
             Medidor::contar();
-            int pos = girarRuleta(usado);
+            unsigned int pos = girarRuleta(usado);
             usado[pos] = true;
             nuevo.agregar(pos);
         }
@@ -267,25 +261,24 @@ bool Plataforma::alternarGrupo() {
     return true;
 }
 
-string Plataforma::rutaAlbumes(int usuario) const {
+// Devuelve la ruta de la carpeta de albumes de un usuario.
+string Plataforma::rutaAlbumes(unsigned int usuario) const {
     return string("/users/") + SUBRUTA + "/" + usuarios[usuario].getNombre() + "/albums/";
 }
 
-string Plataforma::rutaPerfil(int usuario) const {
+// Devuelve la ruta de la foto de perfil de un usuario.
+string Plataforma::rutaPerfil(unsigned int usuario) const {
     return rutaAlbumes(usuario) + "profile.png";
 }
 
-// ---------------------------------------------------------------------------
-// RF-III: solicitudes de amistad
-// ---------------------------------------------------------------------------
-
-bool Plataforma::hayPendiente(int a, int b) const {
-    return usuarios[a].buscarSolicitudDe(b) >= 0 || usuarios[b].buscarSolicitudDe(a) >= 0;
+// Indica si hay una solicitud pendiente entre dos usuarios.
+bool Plataforma::hayPendiente(unsigned int a, unsigned int b) const {
+    return usuarios[a].buscarSolicitudDe(b) != NINGUNO || usuarios[b].buscarSolicitudDe(a) != NINGUNO;
 }
 
-// Las 5 validaciones de III-a, en orden.
-int Plataforma::enviarSolicitud(int destino) {
-    if (destino < 0) {
+// Valida y registra una solicitud de amistad hacia el destino.
+unsigned short Plataforma::enviarSolicitud(unsigned int destino) {
+    if (destino == NINGUNO) {
         return NO_EXISTE;
     }
     if (destino == actual) {
@@ -294,10 +287,10 @@ int Plataforma::enviarSolicitud(int destino) {
     if (amistades.sonAmigos(actual, destino)) {
         return YA_AMIGOS;
     }
-    if (usuarios[actual].buscarSolicitudDe(destino) >= 0) {
+    if (usuarios[actual].buscarSolicitudDe(destino) != NINGUNO) {
         return SOLICITUD_RECIBIDA;
     }
-    if (usuarios[destino].buscarSolicitudDe(actual) >= 0) {
+    if (usuarios[destino].buscarSolicitudDe(actual) != NINGUNO) {
         return SOLICITUD_ENVIADA;
     }
     usuarios[destino].agregarSolicitud(actual);
@@ -305,33 +298,34 @@ int Plataforma::enviarSolicitud(int destino) {
     return OK;
 }
 
-int Plataforma::cantidadSolicitudes() const {
+// Devuelve la cantidad de solicitudes pendientes del usuario actual.
+unsigned int Plataforma::cantidadSolicitudes() const {
     return usuarios[actual].cantidadSolicitudes();
 }
 
-int Plataforma::solicitante(int i) const {
+// Devuelve el indice de quien envio la solicitud en la posicion dada.
+unsigned int Plataforma::solicitante(unsigned int i) const {
     return usuarios[actual].getSolicitudOrigen(i);
 }
 
-void Plataforma::aceptarSolicitud(int i) {
-    int origen = usuarios[actual].getSolicitudOrigen(i);
+// Acepta la solicitud en la posicion dada y guarda la nueva amistad.
+void Plataforma::aceptarSolicitud(unsigned int i) {
+    unsigned int origen = usuarios[actual].getSolicitudOrigen(i);
     amistades.agregar(actual, origen);
     usuarios[actual].quitarSolicitud(i);
     persistencia.agregarAmistad(actual, origen);
     persistencia.guardarSolicitudes(usuarios);
 }
 
-void Plataforma::rechazarSolicitud(int i) {
+// Elimina la solicitud en la posicion dada.
+void Plataforma::rechazarSolicitud(unsigned int i) {
     usuarios[actual].quitarSolicitud(i);
     persistencia.guardarSolicitudes(usuarios);
 }
 
-// ---------------------------------------------------------------------------
-// RF-IV: perfil de un amigo
-// ---------------------------------------------------------------------------
-
-int Plataforma::validarAmigo(int usuario) const {
-    if (usuario < 0) {
+// Verifica que el usuario exista y sea amigo del usuario actual.
+unsigned short Plataforma::validarAmigo(unsigned int usuario) const {
+    if (usuario == NINGUNO) {
         return NO_EXISTE;
     }
     if (usuario == actual) {
@@ -343,10 +337,11 @@ int Plataforma::validarAmigo(int usuario) const {
     return OK;
 }
 
-void Plataforma::albumesVisibles(int amigo, Vector<int>& salida) const {
+// Obtiene las posiciones de los albumes visibles de un amigo.
+void Plataforma::albumesVisibles(unsigned int amigo, Vector<unsigned int>& salida) const {
     salida.vaciar();
     const Usuario& u = usuarios[amigo];
-    for (int i = 0; i < u.cantidadAlbumes(); i++) {
+    for (unsigned int i = 0; i < u.cantidadAlbumes(); i++) {
         Medidor::contar();
         if (u.getAlbum(i).esVisibleParaAmigos()) {
             salida.agregar(i);
@@ -354,36 +349,39 @@ void Plataforma::albumesVisibles(int amigo, Vector<int>& salida) const {
     }
 }
 
-const Album& Plataforma::getAlbum(int usuario, int album) const {
+// Devuelve un album de un usuario.
+const Album& Plataforma::getAlbum(unsigned int usuario, unsigned int album) const {
     return usuarios[usuario].getAlbum(album);
 }
 
-string Plataforma::rutaFoto(int usuario, int album, int foto) const {
+// Devuelve la ruta de una foto de un album.
+string Plataforma::rutaFoto(unsigned int usuario, unsigned int album, unsigned int foto) const {
     const Album& a = usuarios[usuario].getAlbum(album);
     return a.getFoto(foto).getRuta(a.getRuta(rutaAlbumes(usuario)));
 }
 
-int Plataforma::buscarLike(const Foto* foto) const {
-    for (int i = 0; i < likesSesion.tamano(); i++) {
+// Busca una foto entre los likes de la sesion y devuelve su posicion o NINGUNO.
+unsigned int Plataforma::buscarLike(const Foto* foto) const {
+    for (unsigned int i = 0; i < likesSesion.tamano(); i++) {
         Medidor::contar();
         if (likesSesion[i] == foto) {
             return i;
         }
     }
-    return -1;
+    return NINGUNO;
 }
 
-bool Plataforma::tieneLike(int usuario, int album, int foto) const {
-    return buscarLike(&usuarios[usuario].getAlbum(album).getFoto(foto)) >= 0;
+// Indica si el usuario actual dio like a la foto en esta sesion.
+bool Plataforma::tieneLike(unsigned int usuario, unsigned int album, unsigned int foto) const {
+    return buscarLike(&usuarios[usuario].getAlbum(album).getFoto(foto)) != NINGUNO;
 }
 
-// Alterna el like. Devuelve true si la foto queda con like.
-// La marca de "ya di like" solo dura la sesion; el conteo se guarda en el archivo.
-bool Plataforma::alternarLike(int usuario, int album, int foto) {
+// Da o quita el like de una foto y devuelve si queda con like.
+bool Plataforma::alternarLike(unsigned int usuario, unsigned int album, unsigned int foto) {
     Foto& f = usuarios[usuario].getAlbum(album).getFoto(foto);
-    int pos = buscarLike(&f);
+    unsigned int pos = buscarLike(&f);
     bool quedaConLike;
-    if (pos >= 0) {
+    if (pos != NINGUNO) {
         likesSesion.quitarEn(pos);
         if (f.getLikes() > 0) {
             f.setLikes(f.getLikes() - 1);
@@ -398,43 +396,37 @@ bool Plataforma::alternarLike(int usuario, int album, int foto) {
     return quedaConLike;
 }
 
-// ---------------------------------------------------------------------------
-// RF-V: sugerencias de amistad
-// ---------------------------------------------------------------------------
-
-// Mas comunes primero; si empatan, orden alfabetico.
-bool Plataforma::esMejorCandidato(int comunesA, int usuarioA, int comunesB, int usuarioB) const {
+// Compara dos candidatos por amigos en comun y luego por nombre.
+bool Plataforma::esMejorCandidato(unsigned int comunesA, unsigned int usuarioA,
+                                  unsigned int comunesB, unsigned int usuarioB) const {
     if (comunesA != comunesB) {
         return comunesA > comunesB;
     }
     return usuarios[usuarioA].getNombre() < usuarios[usuarioB].getNombre();
 }
 
-// Candidatos: usuarios que no son yo, ni mis amigos, ni tienen solicitud pendiente
-// conmigo, y que tienen al menos un amigo en comun conmigo (amigos de mis amigos).
-// Se guardan los k mejores en dos arreglos dinamicos de tamano k, ordenados por
-// insercion: cada candidato nuevo entra al fondo y sube mientras sea mejor.
-void Plataforma::sugerencias(int k, Vector<int>& candidatos, Vector<int>& comunes) {
-    int* mejores = new int[k];
-    int* mejoresComunes = new int[k];
-    int llenos = 0;
-    Medidor::registrarLocal(2ULL * (unsigned long long)k * sizeof(int));
+// Obtiene los k mejores candidatos a amistad y sus amigos en comun.
+void Plataforma::sugerencias(unsigned short k, Vector<unsigned int>& candidatos, Vector<unsigned int>& comunes) {
+    unsigned int* mejores = new unsigned int[k];
+    unsigned int* mejoresComunes = new unsigned int[k];
+    unsigned int llenos = 0;
+    Medidor::registrarLocal(2ULL * (unsigned long long)k * sizeof(unsigned int));
 
-    for (int c = 0; c < usuarios.tamano(); c++) {
+    for (unsigned int c = 0; c < usuarios.tamano(); c++) {
         Medidor::contar();
         if (c == actual || amistades.sonAmigos(actual, c) || hayPendiente(actual, c)) {
             continue;
         }
-        int com = amistades.comunes(actual, c);
+        unsigned int com = amistades.comunes(actual, c);
         if (com == 0) {
             continue;
         }
-        int pos;
+        unsigned int pos;
         if (llenos < k) {
             pos = llenos;
             llenos++;
         } else if (esMejorCandidato(com, c, mejoresComunes[k - 1], mejores[k - 1])) {
-            pos = k - 1;   // reemplaza al peor
+            pos = k - 1;
         } else {
             continue;
         }
@@ -443,7 +435,7 @@ void Plataforma::sugerencias(int k, Vector<int>& candidatos, Vector<int>& comune
         while (pos > 0 && esMejorCandidato(mejoresComunes[pos], mejores[pos],
                                            mejoresComunes[pos - 1], mejores[pos - 1])) {
             Medidor::contar();
-            int temporal = mejores[pos];
+            unsigned int temporal = mejores[pos];
             mejores[pos] = mejores[pos - 1];
             mejores[pos - 1] = temporal;
             temporal = mejoresComunes[pos];
@@ -455,7 +447,7 @@ void Plataforma::sugerencias(int k, Vector<int>& candidatos, Vector<int>& comune
 
     candidatos.vaciar();
     comunes.vaciar();
-    for (int i = 0; i < llenos; i++) {
+    for (unsigned int i = 0; i < llenos; i++) {
         Medidor::contar();
         candidatos.agregar(mejores[i]);
         comunes.agregar(mejoresComunes[i]);
@@ -464,30 +456,24 @@ void Plataforma::sugerencias(int k, Vector<int>& candidatos, Vector<int>& comune
     delete[] mejoresComunes;
 }
 
-// ---------------------------------------------------------------------------
-// RF-VI: mensajes
-// ---------------------------------------------------------------------------
-
-int Plataforma::enviarMensaje(int destino, const string& texto) {
-    int validacion = validarAmigo(destino);
+// Valida y guarda un mensaje para un amigo.
+unsigned short Plataforma::enviarMensaje(unsigned int destino, const string& texto) {
+    unsigned short validacion = validarAmigo(destino);
     if (validacion != OK) {
         return validacion;
     }
     if (Texto::esVacio(texto)) {
         return TEXTO_VACIO;
     }
-    if ((int)texto.length() > Mensaje::MAX_TEXTO) {
+    if (texto.length() > Mensaje::MAX_TEXTO) {
         return TEXTO_LARGO;
     }
-    // Fecha de envio: hora local del sistema. Si el reloj del PC esta antes
-    // que el ultimo mensaje, se conserva la fecha de ese mensaje para que la
-    // lista siga ordenada por fecha (la busqueda binaria por rango lo necesita).
     Fecha hora = Fecha::ahora();
     Medidor::externoReloj();
     if (reloj < hora) {
         reloj = hora;
     }
-    int indice = mensajes.tamano();
+    unsigned int indice = mensajes.tamano();
     mensajes.agregar(Mensaje(actual, destino, texto, reloj, false));
     usuarios[actual].agregarEnviado(indice);
     usuarios[destino].agregarRecibido(indice);
@@ -496,13 +482,15 @@ int Plataforma::enviarMensaje(int destino, const string& texto) {
     return OK;
 }
 
-const Vector<int>& Plataforma::noLeidosActual() const {
+// Devuelve los mensajes no leidos del usuario actual.
+const Vector<unsigned int>& Plataforma::noLeidosActual() const {
     return usuarios[actual].getNoLeidos();
 }
 
+// Marca como leidos los mensajes nuevos del usuario actual.
 void Plataforma::marcarNoLeidosComoLeidos() {
-    const Vector<int>& noLeidos = usuarios[actual].getNoLeidos();
-    for (int i = 0; i < noLeidos.tamano(); i++) {
+    const Vector<unsigned int>& noLeidos = usuarios[actual].getNoLeidos();
+    for (unsigned int i = 0; i < noLeidos.tamano(); i++) {
         Medidor::contar();
         mensajes[noLeidos[i]].marcarLeido();
     }
@@ -510,19 +498,20 @@ void Plataforma::marcarNoLeidosComoLeidos() {
     persistencia.guardarMensajes(mensajes);
 }
 
-const Vector<int>& Plataforma::recibidosActual() const {
+// Devuelve los mensajes recibidos por el usuario actual.
+const Vector<unsigned int>& Plataforma::recibidosActual() const {
     return usuarios[actual].getRecibidos();
 }
 
-// Posiciones [desde, hasta) de los recibidos con fecha en [inicio, fin].
-void Plataforma::buscarRango(const Fecha& inicio, const Fecha& fin, int& desde, int& hasta) const {
-    const Vector<int>& recibidos = usuarios[actual].getRecibidos();
-    // Busqueda binaria del primer mensaje con fecha >= inicio.
-    int bajo = 0;
-    int alto = recibidos.tamano();
+// Obtiene las posiciones de los mensajes recibidos entre dos fechas.
+void Plataforma::buscarRango(const Fecha& inicio, const Fecha& fin,
+                             unsigned int& desde, unsigned int& hasta) const {
+    const Vector<unsigned int>& recibidos = usuarios[actual].getRecibidos();
+    unsigned int bajo = 0;
+    unsigned int alto = recibidos.tamano();
     while (bajo < alto) {
         Medidor::contar();
-        int medio = (bajo + alto) / 2;
+        unsigned int medio = (bajo + alto) / 2;
         if (mensajes[recibidos[medio]].getFecha() < inicio) {
             bajo = medio + 1;
         } else {
@@ -537,19 +526,16 @@ void Plataforma::buscarRango(const Fecha& inicio, const Fecha& fin, int& desde, 
     }
 }
 
-const Mensaje& Plataforma::getMensaje(int i) const {
+// Devuelve el mensaje en la posicion dada.
+const Mensaje& Plataforma::getMensaje(unsigned int i) const {
     return mensajes[i];
 }
 
-// ---------------------------------------------------------------------------
-// RF-VII: memoria. Los bucles de esta funcion no se cuentan como iteraciones
-// porque son parte de la medicion, no de la funcionalidad.
-// ---------------------------------------------------------------------------
-
+// Calcula la memoria usada por las estructuras de la plataforma.
 unsigned long long Plataforma::memoriaTotal() const {
-    unsigned long long total = sizeof(*this);   // incluye el generador mt19937 y el reloj
+    unsigned long long total = sizeof(*this);
     total += usuarios.memoriaArreglo();
-    for (int i = 0; i < usuarios.tamano(); i++) {
+    for (unsigned int i = 0; i < usuarios.tamano(); i++) {
         total += usuarios[i].memoriaDinamica();
     }
     total += mensajes.memoriaArreglo();

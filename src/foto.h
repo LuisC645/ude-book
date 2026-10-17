@@ -27,7 +27,7 @@ private:
     string nombre;
     Fecha captura;
     unsigned int tamano; // bytes
-    unsigned int likes;
+    unsigned short likes;
 
 };
 

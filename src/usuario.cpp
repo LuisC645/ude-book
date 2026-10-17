@@ -21,35 +21,35 @@ void Usuario::agregarAlbum(const Album& album) {
     albumes.agregar(album);
 }
 
-int Usuario::cantidadAlbumes() const {
+unsigned int Usuario::cantidadAlbumes() const {
     return albumes.tamano();
 }
 
-const Album& Usuario::getAlbum(int i) const {
+const Album& Usuario::getAlbum(unsigned int i) const {
     return albumes[i];
 }
 
-Album& Usuario::getAlbum(int i) {
+Album& Usuario::getAlbum(unsigned int i) {
     return albumes[i];
 }
 
-void Usuario::agregarRecibido(int mensaje) {
+void Usuario::agregarRecibido(unsigned int mensaje) {
     recibidos.agregar(mensaje);
 }
 
-void Usuario::agregarEnviado(int mensaje) {
+void Usuario::agregarEnviado(unsigned int mensaje) {
     enviados.agregar(mensaje);
 }
 
-void Usuario::agregarNoLeido(int mensaje) {
+void Usuario::agregarNoLeido(unsigned int mensaje) {
     noLeidos.agregar(mensaje);
 }
 
-const Vector<int>& Usuario::getRecibidos() const {
+const Vector<unsigned int>& Usuario::getRecibidos() const {
     return recibidos;
 }
 
-const Vector<int>& Usuario::getNoLeidos() const {
+const Vector<unsigned int>& Usuario::getNoLeidos() const {
     return noLeidos;
 }
 
@@ -57,35 +57,35 @@ void Usuario::vaciarNoLeidos() {
     noLeidos.vaciar();
 }
 
-void Usuario::agregarSolicitud(int origen) {
+void Usuario::agregarSolicitud(unsigned int origen) {
     solicitudes.agregar(origen);
 }
 
-int Usuario::cantidadSolicitudes() const {
+unsigned int Usuario::cantidadSolicitudes() const {
     return solicitudes.tamano();
 }
 
-int Usuario::getSolicitudOrigen(int i) const {
+unsigned int Usuario::getSolicitudOrigen(unsigned int i) const {
     return solicitudes[i];
 }
 
-void Usuario::quitarSolicitud(int i) {
+void Usuario::quitarSolicitud(unsigned int i) {
     solicitudes.quitarEn(i);
 }
 
-int Usuario::buscarSolicitudDe(int origen) const {
-    for (int i = 0; i < solicitudes.tamano(); i++) {
+unsigned int Usuario::buscarSolicitudDe(unsigned int origen) const {
+    for (unsigned int i = 0; i < solicitudes.tamano(); i++) {
         Medidor::contar();
         if (solicitudes[i] == origen) {
             return i;
         }
     }
-    return -1;
+    return NINGUNO;
 }
 
 unsigned long long Usuario::memoriaDinamica() const {
     unsigned long long total = albumes.memoriaArreglo();
-    for (int i = 0; i < albumes.tamano(); i++) {
+    for (unsigned int i = 0; i < albumes.tamano(); i++) {
         total += albumes[i].memoriaDinamica();
     }
     total += recibidos.memoriaArreglo() + enviados.memoriaArreglo() + noLeidos.memoriaArreglo();

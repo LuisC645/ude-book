@@ -30,7 +30,7 @@ public:
     void escribirCompacta(ostream& salida, bool incluirHora) const;
 
 
-    void fijarHora(int nuevaHora, int nuevoMinuto);
+    void fijarHora(unsigned short nuevaHora, unsigned short nuevoMinuto);
 
     bool operator<(const Fecha& otra) const;
     bool operator<=(const Fecha& otra) const;
@@ -47,8 +47,8 @@ private:
     bool conHora;
 
     unsigned long long clave() const;   // AAAAMMDDhhmm como un solo numero
-    static bool numeroEn(const string& texto, int desde, int cuantos, int& valor);
-    static void escribirCifras(ostream& salida, int valor, int cifras);
+    static bool numeroEn(const string& texto, unsigned int desde, unsigned int cuantos, unsigned int& valor);
+    static void escribirCifras(ostream& salida, unsigned int valor, unsigned short cifras);
 };
 
 #endif // FECHA_H

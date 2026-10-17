@@ -23,7 +23,7 @@ public:
     static bool contiene(const string& texto, char c);
 
     // Convertir a entero
-    static bool aEntero(const string& texto, int& salida);
+    static bool aEntero(const string& texto, unsigned int& salida);
 
     static bool esEspacio(char c);
 

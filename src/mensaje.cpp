@@ -1,6 +1,6 @@
 #include "mensaje.h"
 
-const int Mensaje::MAX_TEXTO;
+const unsigned short Mensaje::MAX_TEXTO;
 
 
 Mensaje::Mensaje() : emisor(-1), receptor(-1), texto(), fecha(), leido(false) {}

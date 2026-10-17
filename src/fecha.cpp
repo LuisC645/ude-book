@@ -13,7 +13,7 @@ Fecha::Fecha(unsigned short ano, unsigned short mes, unsigned short dia, unsigne
 Fecha Fecha::ahora() {
     time_t segundos = time(nullptr);
     tm* local = localtime(&segundos);
-    return Fecha(local->tm_mday, local->tm_mon + 1, local->tm_year + 1900,
+    return Fecha(local->tm_year + 1900, local->tm_mon + 1, local->tm_mday,
                  local->tm_hour, local->tm_min);
 }
 
@@ -39,11 +39,11 @@ bool Fecha::esValida() const {
     if (dia < 1 || dia > diasDelMes(mes, ano)) {
         return false;
     }
-    return hora >= 0 && hora <= 23 && min >= 0 && min <= 59;
+    return hora <= 23 && min <= 59;
 }
 
 // Valida que el trozo sean solo digitos y lo convierte con stoi (via Texto::aEntero).
-bool Fecha::numeroEn(const string& texto, int desde, int cuantos, int& valor) {
+bool Fecha::numeroEn(const string& texto, unsigned int desde, unsigned int cuantos, unsigned int& valor) {
     return Texto::aEntero(texto.substr(desde, cuantos), valor);
 }
 
@@ -55,15 +55,15 @@ bool Fecha::desdeTexto(const string& texto, Fecha& salida) {
         return false;
     }
 
-    int d = 0;
-    int m = 0;
-    int a = 0;
+    unsigned int d = 0;
+    unsigned int m = 0;
+    unsigned int a = 0;
 
     if (!numeroEn(t, 0, 2, d) || !numeroEn(t, 3, 2, m) || !numeroEn(t, 6, 4, a)) {
         return false;
     }
 
-    Fecha f(d, m, a, 0, 0);
+    Fecha f(a, m, d, 0, 0);
     f.conHora = false;
     if (!f.esValida()) {
         return false;
@@ -73,16 +73,16 @@ bool Fecha::desdeTexto(const string& texto, Fecha& salida) {
 }
 
 bool Fecha::desdeCompacta(const string& texto, Fecha& salida) {
-    int n = texto.length();
+    unsigned int n = (unsigned int)texto.length();
 
     if (n != 8 && n != 12) {
         return false;
     }
-    int a = 0;
-    int m = 0;
-    int d = 0;
-    int h = 0;
-    int mi = 0;
+    unsigned int a = 0;
+    unsigned int m = 0;
+    unsigned int d = 0;
+    unsigned int h = 0;
+    unsigned int mi = 0;
 
     if (!numeroEn(texto, 0, 4, a) || !numeroEn(texto, 4, 2, m) || !numeroEn(texto, 6, 2, d)) {
         return false;
@@ -91,7 +91,7 @@ bool Fecha::desdeCompacta(const string& texto, Fecha& salida) {
         return false;
     }
 
-    Fecha f(d, m, a, h, mi);
+    Fecha f(a, m, d, h, mi);
     f.conHora = (n == 12);
     if (!f.esValida()) {
         return false;
@@ -101,7 +101,7 @@ bool Fecha::desdeCompacta(const string& texto, Fecha& salida) {
 }
 
 // Escribe valor con exactamente 'cifras' digitos, rellenando con ceros a la izquierda
-void Fecha::escribirCifras(ostream& salida, int valor, int cifras) {
+void Fecha::escribirCifras(ostream& salida, unsigned int valor, unsigned short cifras) {
     char anterior = salida.fill('0');   // relleno con '0' (guarda el que habia)
     salida.width(cifras);               // ancho minimo del siguiente dato
     salida << valor;
@@ -118,7 +118,7 @@ void Fecha::escribirCompacta(ostream& salida, bool incluirHora) const {
     }
 }
 
-void Fecha::fijarHora(int nuevaHora, int nuevoMinuto) {
+void Fecha::fijarHora(unsigned short nuevaHora, unsigned short nuevoMinuto) {
     hora = nuevaHora;
     min = nuevoMinuto;
     conHora = true;

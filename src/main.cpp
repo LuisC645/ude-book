@@ -1,4 +1,4 @@
-#include "src/plataforma.h"
+#include "plataforma.h"
 
 // main solo crea la plataforma y la ejecuta.
 int main() {

@@ -3,6 +3,12 @@
 
 using namespace std;
 
+unsigned long long Medidor::iteraciones = 0;
+unsigned long long Medidor::usosAleatorio = 0;
+unsigned long long Medidor::usosArchivo = 0;
+unsigned long long Medidor::usosReloj = 0;
+unsigned long long Medidor::bytesLocales = 0;
+
 Medidor::Medidor() {}
 
 void Medidor::contar(){

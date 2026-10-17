@@ -10,9 +10,9 @@ class Album
 public:
 
     // Privacidad
-    static const int PUBLICO = 0;
-    static const int AMIGOS = 1;
-    static const int PRIVADO = 2;
+    static const unsigned short PUBLICO = 0;
+    static const unsigned short AMIGOS = 1;
+    static const unsigned short PRIVADO = 2;
 
     Album();
     Album(const string& nombre, unsigned short privacidad);
@@ -20,10 +20,10 @@ public:
     // getters
     const string& getNombre() const;
     unsigned short getPrivacidad() const;
-    const Foto& getFoto(int i) const;
+    const Foto& getFoto(unsigned int i) const;
 
     // Guardar foto en album
-    Foto& getFoto(int i);
+    Foto& getFoto(unsigned int i);
 
     // rutaUsuario = ".../albums/"  ->  ".../albums/<album>/"
     string getRuta(const string& rutaUsuario) const;

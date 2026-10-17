@@ -1,8 +1,8 @@
 #include "album.h"
 
-const int Album::PUBLICO;
-const int Album::AMIGOS;
-const int Album::PRIVADO;
+const unsigned short Album::PUBLICO;
+const unsigned short Album::AMIGOS;
+const unsigned short Album::PRIVADO;
 
 Album::Album() : nombre(), privacidad(PRIVADO), fotos() {}
 
@@ -29,11 +29,11 @@ unsigned int Album::cantidadFotos() const {
     return fotos.tamano();
 }
 
-const Foto& Album::getFoto(int i) const {
+const Foto& Album::getFoto(unsigned int i) const {
     return fotos[i];
 }
 
-Foto& Album::getFoto(int i) {
+Foto& Album::getFoto(unsigned int i) {
     return fotos[i];
 }
 

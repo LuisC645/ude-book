@@ -8,7 +8,7 @@ class Mensaje
 {
 public:
 
-    static const int MAX_TEXTO = 512;
+    static const unsigned short MAX_TEXTO = 512;
 
     Mensaje();
     Mensaje(unsigned int emisor, unsigned int receptor, const string& texto, const Fecha& fecha, bool leido);

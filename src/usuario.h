@@ -19,24 +19,24 @@ public:
 
     // Albumes
     void agregarAlbum(const Album& album);
-    int cantidadAlbumes() const;
-    const Album& getAlbum(int i) const;
-    Album& getAlbum(int i);
+    unsigned int cantidadAlbumes() const;
+    const Album& getAlbum(unsigned int i) const;
+    Album& getAlbum(unsigned int i);
 
     // Mensajes (indices al conjunto global, ordenados por fecha)
-    void agregarRecibido(int mensaje);
-    void agregarEnviado(int mensaje);
-    void agregarNoLeido(int mensaje);
-    const Vector<int>& getRecibidos() const;
-    const Vector<int>& getNoLeidos() const;
+    void agregarRecibido(unsigned int mensaje);
+    void agregarEnviado(unsigned int mensaje);
+    void agregarNoLeido(unsigned int mensaje);
+    const Vector<unsigned int>& getRecibidos() const;
+    const Vector<unsigned int>& getNoLeidos() const;
     void vaciarNoLeidos();
 
     // Solicitudes de amistad pendientes que este usuario ha recibido
-    void agregarSolicitud(int origen);
-    int cantidadSolicitudes() const;
-    int getSolicitudOrigen(int i) const;
-    void quitarSolicitud(int i);
-    int buscarSolicitudDe(int origen) const;   // posicion o -1
+    void agregarSolicitud(unsigned int origen);
+    unsigned int cantidadSolicitudes() const;
+    unsigned int getSolicitudOrigen(unsigned int i) const;
+    void quitarSolicitud(unsigned int i);
+    unsigned int buscarSolicitudDe(unsigned int origen) const;   // posicion o NINGUNO
 
     unsigned long long memoriaDinamica() const;
 
@@ -50,10 +50,10 @@ private:
     Fecha inscripcion;
 
     Vector<Album> albumes;
-    Vector<int> recibidos;
-    Vector<int> enviados;
-    Vector<int> noLeidos;
-    Vector<int> solicitudes;
+    Vector<unsigned int> recibidos;
+    Vector<unsigned int> enviados;
+    Vector<unsigned int> noLeidos;
+    Vector<unsigned int> solicitudes;
 
 };
 

@@ -9,14 +9,10 @@
 
 using namespace std;
 
+// Asocia el menu a la plataforma.
 Menu::Menu(Plataforma& plataforma) : plataforma(plataforma), cerrada(false) {}
 
-// ---------------------------------------------------------------------------
-// Lectura validada
-// ---------------------------------------------------------------------------
-
-// Muestra el mensaje y lee una linea completa. Si tiene mas de 512 caracteres
-// la descarta y pide otra. Devuelve false solo si se termino la entrada.
+// Muestra un mensaje y lee una linea de maximo 512 caracteres.
 bool Menu::leer(const char* mensaje, string& linea) {
     while (!cerrada) {
         Medidor::contar();
@@ -25,7 +21,7 @@ bool Menu::leer(const char* mensaje, string& linea) {
             cerrada = true;
             break;
         }
-        if ((int)linea.length() <= Mensaje::MAX_TEXTO) {
+        if (linea.length() <= Mensaje::MAX_TEXTO) {
             return true;
         }
         cout << "La entrada supera los " << Mensaje::MAX_TEXTO << " caracteres. Intente de nuevo.\n";
@@ -34,8 +30,8 @@ bool Menu::leer(const char* mensaje, string& linea) {
     return false;
 }
 
-// Lee un entero en [minimo, maximo]; repite hasta que sea valido.
-bool Menu::leerEntero(const char* mensaje, int minimo, int maximo, int& valor) {
+// Lee un numero entero dentro de un rango.
+bool Menu::leerEntero(const char* mensaje, unsigned int minimo, unsigned int maximo, unsigned int& valor) {
     string linea;
     while (leer(mensaje, linea)) {
         Medidor::contar();
@@ -47,14 +43,12 @@ bool Menu::leerEntero(const char* mensaje, int minimo, int maximo, int& valor) {
     return false;
 }
 
+// Muestra el consumo de recursos actual.
 void Menu::reportar() const {
     Medidor::reportar(plataforma.memoriaTotal() + sizeof(*this));
 }
 
-// ---------------------------------------------------------------------------
-// Pantalla de ingreso (RF-II)
-// ---------------------------------------------------------------------------
-
+// Muestra la pantalla de ingreso hasta que el usuario decide salir.
 void Menu::ejecutar() {
     string nombre;
     string contrasena;
@@ -66,7 +60,7 @@ void Menu::ejecutar() {
         }
         nombre = Texto::recortado(nombre);
         if (nombre.empty()) {
-            break;   // ENTER vacio en el usuario: salir del programa
+            break;
         }
         if (!leer("Contrasena: ", contrasena)) {
             break;
@@ -76,7 +70,7 @@ void Menu::ejecutar() {
         if (!plataforma.iniciarSesion(nombre, contrasena)) {
             cout << "Usuario o contrasena incorrectos.\n";
             reportar();
-            continue;   // sin limite de intentos
+            continue;
         }
         mostrarEncabezado();
         reportar();
@@ -87,12 +81,13 @@ void Menu::ejecutar() {
     cout << "Hasta pronto.\n";
 }
 
+// Muestra las fotos de perfil del grupo de amigos y el saludo.
 void Menu::mostrarEncabezado() const {
     cout << "\n";
     if (plataforma.cantidadAmigos() == 0) {
         cout << "Aun no tienes amigos.\n";
     }
-    for (int i = 0; i < plataforma.tamanoGrupo(); i++) {
+    for (unsigned int i = 0; i < plataforma.tamanoGrupo(); i++) {
         Medidor::contar();
         cout << "Foto perfil de amigo " << (i + 1) << ": "
              << plataforma.rutaPerfil(plataforma.amigoDelGrupo(i)) << "\n";
@@ -101,6 +96,7 @@ void Menu::mostrarEncabezado() const {
          << plataforma.buscarUsuario(plataforma.getActual()).getNombre() << "\n";
 }
 
+// Muestra el menu principal y atiende la opcion elegida.
 void Menu::menuPrincipal() {
     string opcion;
     while (!cerrada) {
@@ -136,6 +132,7 @@ void Menu::menuPrincipal() {
     }
 }
 
+// Cambia el grupo de fotos de perfil de amigos.
 void Menu::alternarFotos() {
     if (plataforma.cantidadAmigos() < Plataforma::MIN_AMIGOS_ALTERNAR) {
         cout << "Opcion no disponible: necesitas al menos 4 amigos.\n";
@@ -151,12 +148,9 @@ void Menu::alternarFotos() {
     reportar();
 }
 
-// ---------------------------------------------------------------------------
-// RF-III: amistades
-// ---------------------------------------------------------------------------
-
+// Muestra el menu de amistades y atiende la opcion elegida.
 void Menu::menuAmistades() {
-    int opcion = -1;
+    unsigned int opcion = 0;
     while (!cerrada) {
         Medidor::contar();
         cout << "\n--- Administrar amistades ---\n";
@@ -177,7 +171,8 @@ void Menu::menuAmistades() {
     }
 }
 
-void Menu::mostrarResultadoSolicitud(int codigo) const {
+// Muestra el resultado de enviar una solicitud.
+void Menu::mostrarResultadoSolicitud(unsigned short codigo) const {
     if (codigo == Plataforma::OK) {
         cout << "Solicitud enviada.\n";
     } else if (codigo == Plataforma::NO_EXISTE) {
@@ -193,6 +188,7 @@ void Menu::mostrarResultadoSolicitud(int codigo) const {
     }
 }
 
+// Pide un usuario y le envia una solicitud de amistad.
 void Menu::enviarSolicitud() {
     Medidor::reiniciar();
     string nombre;
@@ -204,20 +200,21 @@ void Menu::enviarSolicitud() {
     reportar();
 }
 
+// Lista las solicitudes pendientes y acepta o rechaza la elegida.
 void Menu::responderSolicitudes(bool aceptar) {
     Medidor::reiniciar();
-    int n = plataforma.cantidadSolicitudes();
+    unsigned int n = plataforma.cantidadSolicitudes();
     if (n == 0) {
         cout << "No tienes solicitudes pendientes.\n";
         reportar();
         return;
     }
     cout << "\nSolicitudes pendientes:\n";
-    for (int i = 0; i < n; i++) {
+    for (unsigned int i = 0; i < n; i++) {
         Medidor::contar();
         cout << (i + 1) << ". " << plataforma.buscarUsuario(plataforma.solicitante(i)).getNombre() << "\n";
     }
-    int eleccion = 0;
+    unsigned int eleccion = 0;
     const char* mensaje = aceptar ? "Numero de la solicitud a aceptar (0 para volver): "
                                   : "Numero de la solicitud a rechazar (0 para volver): ";
     if (!leerEntero(mensaje, 0, n, eleccion)) {
@@ -236,18 +233,15 @@ void Menu::responderSolicitudes(bool aceptar) {
     reportar();
 }
 
-// ---------------------------------------------------------------------------
-// RF-IV: perfil de un amigo
-// ---------------------------------------------------------------------------
-
+// Muestra los albumes visibles de un amigo.
 void Menu::visitarPerfil() {
     Medidor::reiniciar();
     string nombre;
     if (!leer("Usuario del amigo: ", nombre)) {
         return;
     }
-    int amigo = plataforma.buscarUsuario(Texto::recortado(nombre));
-    int validacion = plataforma.validarAmigo(amigo);
+    unsigned int amigo = plataforma.buscarUsuario(Texto::recortado(nombre));
+    unsigned short validacion = plataforma.validarAmigo(amigo);
     if (validacion == Plataforma::NO_EXISTE) {
         cout << "El usuario no existe.\n";
     } else if (validacion == Plataforma::MISMO_USUARIO) {
@@ -260,7 +254,7 @@ void Menu::visitarPerfil() {
         return;
     }
 
-    Vector<int> visibles;
+    Vector<unsigned int> visibles;
     plataforma.albumesVisibles(amigo, visibles);
     Medidor::registrarLocal(sizeof(nombre) + sizeof(amigo)
                             + sizeof(visibles) + visibles.memoriaArreglo());
@@ -271,33 +265,33 @@ void Menu::visitarPerfil() {
     while (visibles.tamano() > 0 && !cerrada) {
         Medidor::contar();
         cout << "\nAlbumes de " << nombreAmigo << ":\n";
-        for (int i = 0; i < visibles.tamano(); i++) {
+        for (unsigned int i = 0; i < visibles.tamano(); i++) {
             Medidor::contar();
             const Album& a = plataforma.getAlbum(amigo, visibles[i]);
             cout << (i + 1) << ". " << a.getNombre() << " ("
                  << (a.getPrivacidad() == Album::PUBLICO ? "publico" : "amigos") << ", "
                  << a.cantidadFotos() << " fotos)\n";
         }
-        int eleccion = 0;
+        unsigned int eleccion = 0;
         if (!leerEntero("Elija un album (0 para volver): ", 0, visibles.tamano(), eleccion) || eleccion == 0) {
             break;
         }
-        int album = visibles[eleccion - 1];
+        unsigned int album = visibles[eleccion - 1];
         if (plataforma.getAlbum(amigo, album).cantidadFotos() == 0) {
             cout << "El album no tiene fotos.\n";
         } else {
             recorrerAlbum(amigo, album);
         }
     }
-    reportar();   // al salir del perfil completo
+    reportar();
 }
 
-// Carrusel circular sobre las fotos del album.
-void Menu::recorrerAlbum(int amigo, int album) {
+// Recorre las fotos de un album y permite dar o quitar like.
+void Menu::recorrerAlbum(unsigned int amigo, unsigned int album) {
     const Album& a = plataforma.getAlbum(amigo, album);
-    int n = a.cantidadFotos();
-    int i = 0;
-    int opcion = -1;
+    unsigned int n = a.cantidadFotos();
+    unsigned int i = 0;
+    unsigned int opcion = 0;
     while (!cerrada) {
         Medidor::contar();
         cout << "\nAlbum " << a.getNombre() << " - Foto " << (i + 1) << "/" << n << "\n";
@@ -313,7 +307,7 @@ void Menu::recorrerAlbum(int amigo, int album) {
         if (opcion == 1) {
             i = (i + 1) % n;
         } else if (opcion == 2) {
-            i = (i - 1 + n) % n;
+            i = (i == 0) ? n - 1 : i - 1;
         } else if (plataforma.alternarLike(amigo, album, i)) {
             cout << "Diste like a la foto.\n";
         } else {
@@ -322,19 +316,16 @@ void Menu::recorrerAlbum(int amigo, int album) {
     }
 }
 
-// ---------------------------------------------------------------------------
-// RF-V: sugerencias
-// ---------------------------------------------------------------------------
-
+// Muestra sugerencias de amistad y permite enviar una solicitud.
 void Menu::verSugerencias() {
     Medidor::reiniciar();
-    int k = 0;
+    unsigned int k = 0;
     if (!leerEntero("Cuantas sugerencias desea ver (1 a 20): ", 1, 20, k)) {
         return;
     }
-    Vector<int> candidatos;
-    Vector<int> comunes;
-    plataforma.sugerencias(k, candidatos, comunes);
+    Vector<unsigned int> candidatos;
+    Vector<unsigned int> comunes;
+    plataforma.sugerencias((unsigned short)k, candidatos, comunes);
     Medidor::registrarLocal(sizeof(k) + sizeof(candidatos) + candidatos.memoriaArreglo()
                             + sizeof(comunes) + comunes.memoriaArreglo());
     if (candidatos.tamano() == 0) {
@@ -346,12 +337,12 @@ void Menu::verSugerencias() {
         cout << "Solo hay " << candidatos.tamano() << " sugerencias disponibles.\n";
     }
     cout << "\nSugerencias de amistad:\n";
-    for (int i = 0; i < candidatos.tamano(); i++) {
+    for (unsigned int i = 0; i < candidatos.tamano(); i++) {
         Medidor::contar();
         cout << (i + 1) << ". " << plataforma.buscarUsuario(candidatos[i]).getNombre() << " - "
              << comunes[i] << " amigos en comun\n";
     }
-    int eleccion = 0;
+    unsigned int eleccion = 0;
     if (!leerEntero("Numero para enviar solicitud (0 para omitir): ", 0, candidatos.tamano(), eleccion)) {
         return;
     }
@@ -361,12 +352,9 @@ void Menu::verSugerencias() {
     reportar();
 }
 
-// ---------------------------------------------------------------------------
-// RF-VI: mensajes
-// ---------------------------------------------------------------------------
-
+// Muestra el menu de mensajes y atiende la opcion elegida.
 void Menu::menuMensajes() {
-    int opcion = -1;
+    unsigned int opcion = 0;
     while (!cerrada) {
         Medidor::contar();
         cout << "\n--- Administrar mensajes ---\n";
@@ -387,20 +375,22 @@ void Menu::menuMensajes() {
     }
 }
 
-void Menu::mostrarMensaje(int indice) const {
+// Muestra la fecha, el emisor y el texto de un mensaje.
+void Menu::mostrarMensaje(unsigned int indice) const {
     const Mensaje& m = plataforma.getMensaje(indice);
     cout << "[" << m.getFecha() << "] De: " << plataforma.buscarUsuario(m.getEmisor()).getNombre()
          << ": " << m.getTexto() << "\n";
 }
 
+// Pide un amigo y un texto y envia el mensaje.
 void Menu::enviarMensaje() {
     Medidor::reiniciar();
     string nombre;
     if (!leer("Usuario destinatario: ", nombre)) {
         return;
     }
-    int destino = plataforma.buscarUsuario(Texto::recortado(nombre));
-    int validacion = plataforma.validarAmigo(destino);
+    unsigned int destino = plataforma.buscarUsuario(Texto::recortado(nombre));
+    unsigned short validacion = plataforma.validarAmigo(destino);
     if (validacion == Plataforma::NO_EXISTE) {
         cout << "El usuario no existe.\n";
     } else if (validacion == Plataforma::MISMO_USUARIO) {
@@ -430,24 +420,25 @@ void Menu::enviarMensaje() {
     reportar();
 }
 
+// Muestra los mensajes nuevos y los marca como leidos.
 void Menu::leerNuevos() {
     Medidor::reiniciar();
-    const Vector<int>& noLeidos = plataforma.noLeidosActual();
+    const Vector<unsigned int>& noLeidos = plataforma.noLeidosActual();
     if (noLeidos.tamano() == 0) {
         cout << "No tienes mensajes nuevos.\n";
         reportar();
         return;
     }
     cout << "\nMensajes nuevos (" << noLeidos.tamano() << "):\n";
-    for (int i = 0; i < noLeidos.tamano(); i++) {
+    for (unsigned int i = 0; i < noLeidos.tamano(); i++) {
         Medidor::contar();
         mostrarMensaje(noLeidos[i]);
     }
-    // Se marcan como leidos despues de mostrarlos todos.
     plataforma.marcarNoLeidosComoLeidos();
     reportar();
 }
 
+// Lee una fecha valida en formato DD/MM/AAAA.
 bool Menu::leerFecha(const char* mensaje, Fecha& fecha) {
     string linea;
     while (leer(mensaje, linea)) {
@@ -460,6 +451,7 @@ bool Menu::leerFecha(const char* mensaje, Fecha& fecha) {
     return false;
 }
 
+// Muestra los mensajes recibidos entre dos fechas.
 void Menu::buscarPorFechas() {
     Medidor::reiniciar();
     Fecha inicio;
@@ -474,20 +466,19 @@ void Menu::buscarPorFechas() {
         }
         cout << "La fecha de inicio debe ser anterior o igual a la fecha de fin.\n";
     }
-    // Rango inclusivo: desde las 00:00 del inicio hasta las 23:59 del fin.
     inicio.fijarHora(0, 0);
     fin.fijarHora(23, 59);
 
-    int desde = 0;
-    int hasta = 0;
+    unsigned int desde = 0;
+    unsigned int hasta = 0;
     plataforma.buscarRango(inicio, fin, desde, hasta);
     Medidor::registrarLocal(sizeof(inicio) + sizeof(fin) + sizeof(desde) + sizeof(hasta));
     if (desde == hasta) {
         cout << "No hay mensajes recibidos en ese rango.\n";
     } else {
         cout << "\nMensajes recibidos entre " << inicio << " y " << fin << " (" << (hasta - desde) << "):\n";
-        const Vector<int>& recibidos = plataforma.recibidosActual();
-        for (int i = desde; i < hasta; i++) {
+        const Vector<unsigned int>& recibidos = plataforma.recibidosActual();
+        for (unsigned int i = desde; i < hasta; i++) {
             Medidor::contar();
             mostrarMensaje(recibidos[i]);
         }

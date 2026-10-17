@@ -3,6 +3,9 @@
 
 #include "medidor.h"
 
+// Posicion inexistente (resultado de una busqueda sin exito)
+const unsigned int NINGUNO = 0xFFFFFFFFu;
+
 template<typename T>
 class Vector {
 public:
@@ -13,13 +16,29 @@ public:
         copiarDe(otro);
     }
 
-    void reservar(int nuevaCap) {
+    // Sobrecarga =: copia profunda (cada vector tiene su propio arreglo)
+    Vector& operator=(const Vector& otro) {
+        if (this != &otro) {
+            delete[] datos;
+            datos = nullptr;
+            tam = 0;
+            cap = 0;
+            copiarDe(otro);
+        }
+        return *this;
+    }
+
+    ~Vector() {
+        delete[] datos;
+    }
+
+    void reservar(unsigned int nuevaCap) {
         if (nuevaCap <= cap) {
             return;
         }
 
         T* nuevo = new T[nuevaCap];
-        for (int i = 0; i < tam; i++) {
+        for (unsigned int i = 0; i < tam; i++) {
             Medidor::contar();
             nuevo[i] = datos[i];
         }
@@ -32,10 +51,10 @@ public:
     void agregar(const T& x) {
 
         if (tam == cap) {
-            int nuevaCap = (cap == 0) ? 4 : cap * 2;
+            unsigned int nuevaCap = (cap == 0) ? 4 : cap * 2;
             T* nuevo = new T[nuevaCap];
 
-            for (int i = 0; i < tam; i++) {
+            for (unsigned int i = 0; i < tam; i++) {
                 Medidor::contar();
                 nuevo[i] = datos[i];
             }
@@ -53,17 +72,17 @@ public:
     }
 
     // Sobrecarga: agrega el mismo valor varias veces
-    void agregar(const T& x, int veces) {
+    void agregar(const T& x, unsigned int veces) {
         reservar(tam + veces);
-        for (int i = 0; i < veces; i++) {
+        for (unsigned int i = 0; i < veces; i++) {
             Medidor::contar();
             datos[tam] = x;
             tam++;
         }
     }
 
-    void quitarEn(int i) {
-        for (int j = i; j < tam - 1; j++) {
+    void quitarEn(unsigned int i) {
+        for (unsigned int j = i; j + 1 < tam; j++) {
             Medidor::contar();
             datos[j] = datos[j + 1];
         }
@@ -74,11 +93,11 @@ public:
         tam = 0;
     }
 
-    int tamano() const {
+    unsigned int tamano() const {
         return tam;
     }
 
-    explicit Vector(int capacidadInicial) : datos(nullptr), tam(0), cap(0) {
+    explicit Vector(unsigned int capacidadInicial) : datos(nullptr), tam(0), cap(0) {
         reservar(capacidadInicial);
     }
 
@@ -87,24 +106,24 @@ public:
     }
 
     // Sobrecarga []
-    T& operator[](int i) {
+    T& operator[](unsigned int i) {
         return datos[i];
     }
-    const T& operator[](int i) const {
+    const T& operator[](unsigned int i) const {
         return datos[i];
     }
 
 private:
     T* datos;
-    int tam;
-    int cap;
+    unsigned int tam;
+    unsigned int cap;
 
     void copiarDe(const Vector& otro) {
         if (otro.cap > 0) {
             datos = new T[otro.cap];
             cap = otro.cap;
         }
-        for (int i = 0; i < otro.tam; i++) {
+        for (unsigned int i = 0; i < otro.tam; i++) {
             Medidor::contar();
             datos[i] = otro.datos[i];
         }

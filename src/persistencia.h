@@ -6,7 +6,7 @@
 #include "Vector.h"
 #include "usuario.h"
 #include "mensaje.h"
-#include "matrizAmistad.h"
+#include "matrizamistad.h"
 
 using namespace std;
 
@@ -30,13 +30,13 @@ public:
     bool cargarUsuarios(Vector<Usuario>& usuarios);
     bool cargarAmistades(MatrizAmistad& matriz);
     bool cargarSolicitudes(Vector<Usuario>& usuarios);
-    bool cargarAlbumes(Vector<Usuario>& usuarios, Vector<int>& albumDueno, Vector<int>& albumPosicion);
-    bool cargarFotos(Vector<Usuario>& usuarios, const Vector<int>& albumDueno,
-                     const Vector<int>& albumPosicion);
+    bool cargarAlbumes(Vector<Usuario>& usuarios, Vector<unsigned int>& albumDueno, Vector<unsigned int>& albumPosicion);
+    bool cargarFotos(Vector<Usuario>& usuarios, const Vector<unsigned int>& albumDueno,
+                     const Vector<unsigned int>& albumPosicion);
     bool cargarMensajes(Vector<Usuario>& usuarios, Vector<Mensaje>& mensajes);
 
     // Guardado inmediato de cada cambio.
-    void agregarAmistad(int a, int b);
+    void agregarAmistad(unsigned int a, unsigned int b);
     void guardarSolicitudes(const Vector<Usuario>& usuarios);
     void guardarFotos(const Vector<Usuario>& usuarios);
     void guardarMensajes(const Vector<Mensaje>& mensajes);
@@ -47,8 +47,8 @@ private:
     bool abrirLectura(ifstream& archivo, const char* nombre);
     bool abrirEscritura(ofstream& archivo, const char* nombre, bool anexar);
     static bool leerLinea(ifstream& archivo, string& registro);
-    static int dividir(const string& registro, int maxCampos, Vector<string>& campos);
-    bool error() const;
+    static unsigned int dividir(const string& registro, unsigned short maxCampos, Vector<string>& campos);
+    bool error(const char* nombre, unsigned int linea, const char* motivo) const;
 };
 
 #endif

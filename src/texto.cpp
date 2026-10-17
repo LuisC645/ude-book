@@ -23,15 +23,15 @@ bool Texto::leerLinea(istream& entrada, string& linea) {
 }
 
 string Texto::recortado(const string& texto) {
-    int lon = (int)texto.size();
-    int inicio = 0;
+    unsigned int lon = (unsigned int)texto.size();
+    unsigned int inicio = 0;
 
     while (inicio < lon && esEspacio(texto[inicio])) {
         Medidor::contar();
         inicio++;
     }
 
-    int fin = lon;
+    unsigned int fin = lon;
     while (fin > inicio && esEspacio(texto[fin - 1])) {
         Medidor::contar();
         fin--;
@@ -41,7 +41,7 @@ string Texto::recortado(const string& texto) {
 }
 
 bool Texto::esVacio(const string& texto) {
-    for (int i = 0; i < (int)texto.size(); i++) {
+    for (unsigned int i = 0; i < texto.size(); i++) {
         Medidor::contar();
         if (!esEspacio(texto[i])) {
             return false;
@@ -52,7 +52,7 @@ bool Texto::esVacio(const string& texto) {
 
 
 bool Texto::contiene(const string& texto, char c) {
-    for (int i = 0; i < (int)texto.size(); i++) {
+    for (unsigned int i = 0; i < texto.size(); i++) {
         Medidor::contar();
         if (texto[i] == c) {
             return true;
@@ -61,7 +61,7 @@ bool Texto::contiene(const string& texto, char c) {
     return false;
 }
 
-bool Texto::aEntero(const string& texto, int& salida) {
+bool Texto::aEntero(const string& texto, unsigned int& salida) {
 
     string t = recortado(texto);
 
@@ -69,7 +69,7 @@ bool Texto::aEntero(const string& texto, int& salida) {
         return false;
     }
 
-    salida = stoi(t);
+    salida = (unsigned int)stoul(t);
     return true;
 }
 
