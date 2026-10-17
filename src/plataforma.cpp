@@ -92,6 +92,7 @@ unsigned int Plataforma::buscarUsuario(const string& nombre) const {
             alto = medio;
         }
     }
+
     return NINGUNO;
 }
 
