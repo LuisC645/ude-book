@@ -1,5 +1,7 @@
 1|Viajes|0
 1|Viajes|1
+1|Amigos|1
+1|Comida|1
 2|Universidad|1
 2|Paisajes|0
 3|Universidad|1
